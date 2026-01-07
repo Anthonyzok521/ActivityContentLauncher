@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">ACL Launcher</string>
+    <string name="loading_message">Iniciando PuntoVMachine via ACL...</string>
+</resources>
