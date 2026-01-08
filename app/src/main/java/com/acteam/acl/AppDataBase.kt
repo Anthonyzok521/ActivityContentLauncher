@@ -31,7 +31,7 @@ interface AppDao {
     suspend fun clearAll()
 }
 
-@Database(entities = [AppEntity::class], version = 1)
+@Database(entities = [AppEntity::class], version = 2)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun appDao(): AppDao
 }

@@ -14,7 +14,7 @@ class KioskAccessibilityService : AccessibilityService() {
 
             val message = event.text.toString()
 
-            if (message.contains("Sitef dejó de funcionar", ignoreCase = true)) {
+            if (message.contains("Error 500-sitef", ignoreCase = true)) {
                 restartSitef()
             }
         }

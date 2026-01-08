@@ -68,7 +68,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "acl-db").build()
+        db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "acl-db")
+            .fallbackToDestructiveMigration()
+            .build()
+
         dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
         adminName = ComponentName(this, DeviceAdminReceiver::class.java)
 
