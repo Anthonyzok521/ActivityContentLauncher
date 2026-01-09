@@ -1,9 +1,10 @@
-package com.acteam.acl
+package com.acteam.acl.services
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
-import android.widget.Toast
 
 class KioskAccessibilityService : AccessibilityService() {
 
@@ -32,7 +33,7 @@ class KioskAccessibilityService : AccessibilityService() {
         }
 
         // Esperar un momento y volver a la app principal
-        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+        Handler(Looper.getMainLooper()).postDelayed({
             val backToMain = packageManager.getLaunchIntentForPackage(mainAppPackage)
             backToMain?.let { startActivity(it) }
         }, 5000)

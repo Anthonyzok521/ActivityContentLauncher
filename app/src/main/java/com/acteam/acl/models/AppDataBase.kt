@@ -1,8 +1,9 @@
-package com.acteam.acl
+package com.acteam.acl.models
 
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
+//Base de datos Sqlite con tabla llama app_queue
 @Entity(tableName = "app_queue")
 data class AppEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
