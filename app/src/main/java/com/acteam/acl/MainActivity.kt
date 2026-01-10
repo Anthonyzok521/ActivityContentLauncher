@@ -1,5 +1,6 @@
 package com.acteam.acl
 
+import android.app.Activity
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -26,6 +27,13 @@ import androidx.compose.runtime.collectAsState
 import android.net.Uri
 import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalView
 import com.acteam.acl.models.*
 import com.acteam.acl.ui.ACLScreen
 import java.io.BufferedReader

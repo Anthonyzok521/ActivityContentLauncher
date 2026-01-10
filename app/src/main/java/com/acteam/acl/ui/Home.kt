@@ -1,9 +1,8 @@
 package com.acteam.acl.ui
 
-import android.graphics.drawable.Icon
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -23,20 +22,17 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.Create
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
@@ -50,45 +46,35 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.ShapeDefaults
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.window.Popup
 import androidx.core.graphics.drawable.toBitmap
-import androidx.lifecycle.lifecycleScope
 import com.acteam.acl.R
 import com.acteam.acl.models.AppDetailedInfo
 import com.acteam.acl.models.AppEntity
 import com.acteam.acl.utils.getDateTimeNow
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 val fontAnta = FontFamily(
         Font(R.font.antaregular, FontWeight.Normal),
@@ -136,7 +122,10 @@ fun ACLScreen(
                 })
 
         if (!showAdmin) {
-            ColumnClockLogo()
+            ColumnClockLogo(
+                appQueue = appQueue,
+                seconds = secondsFromQueue(appQueue)
+            )
         } else {
             AdminPanel(
                 appQueue = appQueue,
@@ -199,6 +188,19 @@ fun ACLScreen(
     }
 }
 
+fun secondsFromQueue(appQueue: List<AppEntity>): Int {
+    var seconds: Int = 0
+    if (appQueue.isEmpty()) return seconds
+
+    for (app in appQueue) {
+        if (!app.runOnlyOnce) {
+            seconds = app.delaySeconds
+        }
+    }
+
+    return seconds
+}
+
 @Composable
 @Preview
 fun Clock() {
@@ -245,37 +247,39 @@ fun Clock() {
 @Composable
 @Preview
 fun LogoACL() {
-    Box(
-        Modifier.padding(horizontal = 180.dp)
-    ) {
-        Box(
-            contentAlignment = Alignment.Center,
+
+        Image(
+            painter = painterResource(id = R.drawable.logo),
+            contentDescription = null,
             modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .padding(horizontal = 0.dp, vertical = 0.dp)
-                .border(
-                    width = 10.dp,
-                    color = Color.White,
-                    shape = RoundedCornerShape(100.dp)
-                )
-        ) {
-            Text(
-                text = "ACL",
-                fontFamily = fontAnta,
-                color = Color.White,
-                fontSize = 120.sp,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
+                .width(300.dp)
+                .height(300.dp)
+        )
 }
 
 @Composable
 @Preview(widthDp = 800, heightDp = 1280)
-fun ColumnClockLogo(appQueue: List<AppEntity> = emptyList()) {
-    Column(
+fun ColumnClockLogo(appQueue: List<AppEntity> = emptyList(), seconds: Int = 0) {
+    var _seconds by remember(appQueue) { mutableStateOf(seconds) }
+    var isRunning by remember(appQueue) { mutableStateOf(appQueue.isNotEmpty()) }
 
+    // LaunchedEffect reaccionará a cambios en la cola de apps
+    LaunchedEffect(key1 = appQueue) {
+        if (appQueue.isNotEmpty()) {
+            _seconds = seconds
+            while (_seconds > 0) {
+                delay(1000L)
+                _seconds--
+            }
+            /*if (_seconds <= 0){
+                delay(1000L)
+                _seconds = seconds
+            }*/
+            isRunning = false
+        }
+    }
+
+    Column(
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -283,20 +287,48 @@ fun ColumnClockLogo(appQueue: List<AppEntity> = emptyList()) {
         Clock()
         Spacer(Modifier.height(100.dp))
         LogoACL()
+        Spacer(Modifier.height(50.dp))
         if (appQueue.isEmpty()) {
-            Text("⚠️ Cola vacía", color = Color.Red, fontWeight = FontWeight.Bold)
-        } else {
-            CircularProgressIndicator()
-            Text("Secuencia en curso...")
+            Text("⚠️ Cola de apps vacía", color = Color.Red, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+        } else if(isRunning) {
+            CircularProgressIndicator(
+                color = Color.White
+            )
+            Text("Secuencia en curso...", fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
+            Text("${_seconds}s", fontSize = 30.sp, color = Color.White, fontWeight = FontWeight.Bold)
+        }
+        Box(
+            contentAlignment = Alignment.BottomCenter,
+
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight()
+        ){
+            Image(
+                painter = painterResource(id = R.drawable.circles),
+                contentDescription = null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(208.dp)
+
+            )
         }
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
+@Preview(widthDp = 800, heightDp = 1280)
 fun AdminPanel(
-    appQueue: List<AppEntity> = emptyList(),
+    appQueue: List<AppEntity> = listOf(
+        AppEntity(
+            id = 0,
+            packageName = "com.google.android.youtube",
+            label = "YouTube",
+            delaySeconds = 15,
+            orderIndex = 0,
+            runOnlyOnce = false)
+    ),
     availableApps: List<AppDetailedInfo> = emptyList(),
     showMenu: Boolean = false,
     onRemoveApp: (Int) -> Unit = {},
@@ -308,6 +340,20 @@ fun AdminPanel(
     onSelectApp: (AppDetailedInfo) -> Unit = {},
     onOpenAccessibilitySettings: () -> Unit = {}
 ) {
+
+    var seconds by remember { mutableStateOf(300) }
+
+    LaunchedEffect(Unit) {
+        while (seconds > 0) {
+            seconds--
+            delay(1000)
+        }
+    }
+
+    if(seconds <= 0){
+        onCloseAdmin()
+    }
+
     Scaffold(Modifier.fillMaxSize(), topBar = {
         TopAppBar(
             colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
@@ -407,31 +453,90 @@ fun AdminPanel(
             Modifier
                 .padding(it)
                 ) {
-            Row(Modifier.background(Color(18, 17, 17)).weight(1f)) {
+            Row(Modifier
+                .background(Color(18, 17, 17))
+                .weight(1f)) {
                 // Lista de Cola
                 LazyColumn(Modifier
                     .weight(1f)
                     .padding(8.dp)) {
-                    item { Text("Cola:", fontSize = 20.sp, color=Color.White, fontWeight = FontWeight.Bold) }
+                    item { Text("Cola:", fontSize = 22.sp, color=Color.White, fontWeight = FontWeight.Bold) }
                     items(appQueue) { app ->
                         Card(Modifier.padding(vertical = 4.dp)) {
                             Row(
                                 Modifier
                                     .background(Color.White)
-                                    .padding(8.dp)
+                                    //.padding(8.dp)
                                     .fillMaxWidth(),
                                 Arrangement.SpaceBetween,
                                 Alignment.CenterVertically
                             ) {
-                                Text("${app.label}\n${app.delaySeconds}s | Única: ${app.runOnlyOnce}", color = Color.Black, fontSize = 18.sp)
-                                IconButton(onClick = { onRemoveApp(app.id) }) { Text("❌") }
+                                Row(
+                                    verticalAlignment = Alignment.Bottom
+                                ){
+                                    Text("${app.label}\n${app.delaySeconds}s | Ejecutar una vez:", color = Color.Black, fontSize = 20.sp,)
+                                    Spacer(Modifier.width(8.dp))
+                                    Box(
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .padding(vertical = 5.dp, horizontal = 0.dp),
+                                        contentAlignment = Alignment.Center
+                                    ){
+                                        Box(
+                                            Modifier
+                                                .size(10.dp)
+                                                .background(
+                                                    if (app.runOnlyOnce) Color.Green else Color.Red,
+                                                    RoundedCornerShape(10.dp)
+                                                )
+                                        )
+                                    }
+                                }
+                                Row(){
+                                    Box(
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .width(40.dp)
+                                            .background(Color.Black)
+
+                                    ) {
+                                        IconButton(onClick = { onRemoveApp(app.id) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.ArrowDropDown,
+                                                contentDescription = "Mover",
+                                                tint = Color.White,
+                                                modifier = Modifier.size(20.dp)
+                                            )
+                                        }
+
+                                    }
+
+                                    Box(
+                                        Modifier
+                                            .fillMaxHeight()
+                                            .width(40.dp)
+                                            .background(Color.Red)
+
+                                    ) {
+                                        IconButton(onClick = { onRemoveApp(app.id) }) {
+                                            Icon(
+                                                imageVector = Icons.Default.Delete,
+                                                contentDescription = "Quitar",
+                                                tint = Color.White
+                                            )
+                                        }
+                                    }
+                                }
+
                             }
                         }
                     }
                 }
 
                 Divider(
-                    Modifier.width(3.dp).fillMaxHeight(),
+                    Modifier
+                        .width(3.dp)
+                        .fillMaxHeight(),
                     color = Color.Black,
                 )
 
