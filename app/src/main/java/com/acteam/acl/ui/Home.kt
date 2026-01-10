@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -66,6 +67,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -209,19 +211,24 @@ fun Clock() {
 
     LaunchedEffect(Unit) {
         while (true) {
-            time = getDateTimeNow()[0]
-            date = getDateTimeNow()[1]
+            val now = getDateTimeNow()
+            time = now[0]
+            date = now[1]
             delay(1000)
         }
     }
 
-    Box(
-        contentAlignment = Alignment.Center,
+    BoxWithConstraints(
         modifier = Modifier
             .fillMaxWidth()
-            .height(400.dp)
-            .padding(horizontal = 0.dp, vertical = 0.dp)
+            .height(400.dp),
+        contentAlignment = Alignment.Center
     ) {
+        // Determinamos los tamaños de fuente basados en el ancho
+        val isWide = maxWidth > 600.dp
+        val timeFontSize = if (isWide) 180.sp else 80.sp
+        val dateFontSize = if (isWide) 40.sp else 20.sp
+
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -230,14 +237,14 @@ fun Clock() {
                 text = time,
                 fontFamily = fontAnta,
                 color = Color.White,
-                fontSize = 180.sp,
+                fontSize = timeFontSize,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = date,
                 fontFamily = fontAnta,
                 color = Color.White,
-                fontSize = 40.sp,
+                fontSize = dateFontSize,
                 textAlign = TextAlign.Center
             )
         }
@@ -318,7 +325,7 @@ fun ColumnClockLogo(appQueue: List<AppEntity> = emptyList(), seconds: Int = 0) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview(widthDp = 800, heightDp = 1280)
+@Preview(widthDp = 300, heightDp = 400)
 fun AdminPanel(
     appQueue: List<AppEntity> = listOf(
         AppEntity(
@@ -434,19 +441,40 @@ fun AdminPanel(
             }
         )
     },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = onCloseAdmin,
-                containerColor = Color(18, 17, 17),
-                contentColor = Color.White,
-                elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()){
-                Icon(imageVector = Icons.Rounded.Check, contentDescription = null)
+        /*floatingActionButton = {
+            BoxWithConstraints() {
+                if(maxWidth > 600.dp) {
+                    FloatingActionButton(
+                        onClick = onCloseAdmin,
+                        containerColor = Color(18, 17, 17),
+                        contentColor = Color.White,
+                        elevation = FloatingActionButtonDefaults.bottomAppBarFabElevation()
+                    ) {
+                        Icon(imageVector = Icons.Rounded.Check, contentDescription = null)
+                    }
+                }
             }
-        },
+        },*/
         bottomBar = {
             BottomAppBar(
                 containerColor = Color(18, 17, 17),
-            ) { }
+            ) {
+
+                Button(onClick = onCloseAdmin,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(65, 158, 234, 255)
+                    )
+                    ) {
+                    Row(){
+                        Icon(
+                            imageVector = Icons.Rounded.Check,
+                            contentDescription = null,
+                            tint = Color.White
+                        )
+                        Text("Aplicar", color = Color.White, fontSize = 20.sp)
+                    }
+                }
+            }
         },
         containerColor = Color.White) {
         Column(
@@ -462,72 +490,145 @@ fun AdminPanel(
                     .padding(8.dp)) {
                     item { Text("Cola:", fontSize = 22.sp, color=Color.White, fontWeight = FontWeight.Bold) }
                     items(appQueue) { app ->
-                        Card(Modifier.padding(vertical = 4.dp)) {
-                            Row(
-                                Modifier
-                                    .background(Color.White)
-                                    //.padding(8.dp)
-                                    .fillMaxWidth(),
-                                Arrangement.SpaceBetween,
-                                Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.Bottom
-                                ){
-                                    Text("${app.label}\n${app.delaySeconds}s | Ejecutar una vez:", color = Color.Black, fontSize = 20.sp,)
-                                    Spacer(Modifier.width(8.dp))
-                                    Box(
+                        BoxWithConstraints() {
+                            if(maxWidth > 600.dp) {
+                                Card(Modifier.padding(vertical = 4.dp)) {
+                                    Row(
                                         Modifier
-                                            .fillMaxHeight()
-                                            .padding(vertical = 5.dp, horizontal = 0.dp),
-                                        contentAlignment = Alignment.Center
-                                    ){
-                                        Box(
-                                            Modifier
-                                                .size(10.dp)
-                                                .background(
-                                                    if (app.runOnlyOnce) Color.Green else Color.Red,
-                                                    RoundedCornerShape(10.dp)
+                                            .background(Color.White)
+                                            //.padding(8.dp)
+                                            .fillMaxWidth(),
+                                        Arrangement.SpaceBetween,
+                                        Alignment.CenterVertically
+                                    ) {
+                                        Row(
+                                            verticalAlignment = Alignment.Bottom
+                                        ){
+                                            Text("${app.label}\n${app.delaySeconds}s | Ejecutar una vez:", color = Color.Black, fontSize = 20.sp,)
+                                            Spacer(Modifier.width(8.dp))
+                                            Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .padding(vertical = 5.dp, horizontal = 0.dp),
+                                                contentAlignment = Alignment.Center
+                                            ){
+                                                Box(
+                                                    Modifier
+                                                        .size(10.dp)
+                                                        .background(
+                                                            if (app.runOnlyOnce) Color.Green else Color.Red,
+                                                            RoundedCornerShape(10.dp)
+                                                        )
                                                 )
-                                        )
-                                    }
-                                }
-                                Row(){
-                                    Box(
-                                        Modifier
-                                            .fillMaxHeight()
-                                            .width(40.dp)
-                                            .background(Color.Black)
+                                            }
+                                        }
+                                        Row(){
+                                            Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .width(40.dp)
+                                                    .background(Color.Black)
 
-                                    ) {
-                                        IconButton(onClick = { onRemoveApp(app.id) }) {
-                                            Icon(
-                                                imageVector = Icons.Default.ArrowDropDown,
-                                                contentDescription = "Mover",
-                                                tint = Color.White,
-                                                modifier = Modifier.size(20.dp)
-                                            )
+                                            ) {
+                                                IconButton(onClick = { onRemoveApp(app.id) }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.ArrowDropDown,
+                                                        contentDescription = "Mover",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+
+                                            }
+
+                                            Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .width(40.dp)
+                                                    .background(Color.Red)
+
+                                            ) {
+                                                IconButton(onClick = { onRemoveApp(app.id) }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Quitar",
+                                                        tint = Color.White
+                                                    )
+                                                }
+                                            }
                                         }
 
                                     }
-
-                                    Box(
+                                }
+                            }else{
+                                Card(Modifier.padding(vertical = 4.dp)) {
+                                    Column(
                                         Modifier
-                                            .fillMaxHeight()
-                                            .width(40.dp)
-                                            .background(Color.Red)
-
+                                            .background(Color.White)
+                                            //.padding(8.dp)
+                                            .fillMaxWidth(),
+                                        Arrangement.SpaceBetween,
                                     ) {
-                                        IconButton(onClick = { onRemoveApp(app.id) }) {
-                                            Icon(
-                                                imageVector = Icons.Default.Delete,
-                                                contentDescription = "Quitar",
-                                                tint = Color.White
-                                            )
+                                        Column(
+                                        ){
+                                            Text("${app.label}\n${app.delaySeconds}s | Una vez:", color = Color.Black, fontSize = 20.sp, overflow = TextOverflow.Ellipsis)
+
+                                            Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .padding(vertical = 5.dp, horizontal = 0.dp),
+                                                contentAlignment = Alignment.Center
+                                            ){
+                                                Box(
+                                                    Modifier
+                                                        .size(10.dp)
+                                                        .background(
+                                                            if (app.runOnlyOnce) Color.Green else Color.Red,
+                                                            RoundedCornerShape(10.dp)
+                                                        )
+                                                )
+                                            }
                                         }
+                                        Row(Modifier.align(Alignment.End)
+                                        ){
+                                           /* Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .width(40.dp)
+                                                    .background(Color.Black)
+
+                                            ) {
+                                                IconButton(onClick = { onRemoveApp(app.id) }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.ArrowDropDown,
+                                                        contentDescription = "Mover",
+                                                        tint = Color.White,
+                                                        modifier = Modifier.size(20.dp)
+                                                    )
+                                                }
+
+                                            }*/
+
+                                            Box(
+                                                Modifier
+                                                    .fillMaxHeight()
+                                                    .fillMaxWidth()
+                                                    .background(Color.Red),
+                                                contentAlignment = Alignment.Center
+
+                                            ) {
+                                                IconButton(onClick = { onRemoveApp(app.id) }) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Delete,
+                                                        contentDescription = "Quitar",
+                                                        tint = Color.White
+                                                    )
+                                                }
+                                            }
+                                        }
+
                                     }
                                 }
-
                             }
                         }
                     }
