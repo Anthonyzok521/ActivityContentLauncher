@@ -94,7 +94,10 @@ fun ACLScreen(
     onExport: () -> Unit,
     onImportRequest: () -> Unit,
     isPaused: Boolean,
-    onTogglePause: (Boolean) -> Unit
+    onTogglePause: (Boolean) -> Unit,
+    onReboot: () -> Unit,
+    onShutdown: () -> Unit,
+    onLock: () -> Unit
 ) {
     var showAdmin by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
@@ -148,6 +151,9 @@ fun ACLScreen(
                     showMenu = !showMenu
                 },
                 onOpenAccessibilitySettings = onOpenAccessibilitySettings,
+                onReboot = onReboot,
+                onShutdown = onShutdown,
+                onLock = onLock
             )
         }
 
@@ -345,7 +351,10 @@ fun AdminPanel(
     onCloseAdmin: () -> Unit = {},
     onMoreOptions: () -> Unit = {},
     onSelectApp: (AppDetailedInfo) -> Unit = {},
-    onOpenAccessibilitySettings: () -> Unit = {}
+    onOpenAccessibilitySettings: () -> Unit = {},
+    onReboot: () -> Unit = {},
+    onShutdown: () -> Unit = {},
+    onLock: () -> Unit = {}
 ) {
 
     var seconds by remember { mutableStateOf(300) }
@@ -423,6 +432,49 @@ fun AdminPanel(
                             }
                                                                                 },
                         onClick = onImportRequest
+                    )
+                    Divider(
+                        color = Color.Black,
+                        thickness = 1.dp
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = "Bloquear"
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Text("Bloquear Dispositivo")
+                            }
+                        },
+                        onClick = onLock
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = "Reiniciar"
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Text("Reiniciar Dispositivo")
+                            }
+                        },
+                        onClick = onReboot
+                    )
+                    DropdownMenuItem(
+                        text = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = "Apagar"
+                                )
+                                Spacer(Modifier.width(10.dp))
+                                Text("Apagar Dispositivo")
+                            }
+                        },
+                        onClick = onShutdown
                     )
                     Divider(
                         color = Color.Black,

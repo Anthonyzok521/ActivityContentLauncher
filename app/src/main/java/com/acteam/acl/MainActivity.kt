@@ -90,7 +90,10 @@ class MainActivity : ComponentActivity() {
                 onExport = { exportConfig() },
                 onImportRequest = { importLauncher.launch("application/json") },
                 isPaused = isSequencePaused,
-                onTogglePause = { isSequencePaused = it }
+                onTogglePause = { isSequencePaused = it },
+                onReboot = { rebootDevice() },
+                onShutdown = { shutdownDevice() },
+                onLock = { lockDevice() }
             )
         }
 
@@ -209,6 +212,25 @@ class MainActivity : ComponentActivity() {
 
     private fun openAccessibilitySettings() {
         startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+    }
+
+    private fun rebootDevice() {
+
+        if (dpm.isDeviceOwnerApp(packageName)) {
+            dpm.reboot(adminName)
+        }
+    }
+
+    private fun shutdownDevice() {
+        // Para apagar, se suele usar un Intent del sistema o comandos específicos
+        val intent = Intent("android.intent.action.ACTION_REQUEST_SHUTDOWN")
+        intent.putExtra("android.intent.extra.KEY_CONFIRM", false)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        startActivity(intent)
+    }
+
+    private fun lockDevice() {
+        dpm.lockNow()
     }
 
     override fun onResume() { super.onResume(); hideSystemUI() }
